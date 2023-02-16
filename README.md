@@ -352,7 +352,7 @@ urlpatterns = [
 
 ## Allowing Frontend Access with CORS
 
-o allow requests from our frontend application, we need to set up Cross-Origin Resource Sharing (CORS) configuration for our Django project. The  [django-cors-headers](https://pypi.org/project/django-cors-headers/) library provides a simple way to enable CORS in our application.
+To allow requests from our frontend application, we need to set up Cross-Origin Resource Sharing (CORS) configuration for our Django project. The  [django-cors-headers](https://pypi.org/project/django-cors-headers/) library provides a simple way to enable CORS in our application.
 
 First, we need to install the ```django-cors-headers``` package by running the following command: <br> ```pip install django-cors-headers``` 
 
