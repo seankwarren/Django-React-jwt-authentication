@@ -312,37 +312,37 @@ WWW-Authenticate: Bearer realm="api"
 
 ## Customizing JWT token - include the username
 
-jwt tokens can be customized to include specific data. If you paste an access code into the debugger at [jwt.io](https://jwt.io/) you can see the payload data that it contains. (you may need to provide the secret key from your ```settings.py``` file). The data should include the user_id, but what if we wanted to username as well without having to make a seperate request to the server? How to do this is discussed in the [Customizing token claims](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/customizing_token_claims.html) section of the docs.
+JWT tokens can be customized to include specific data. If you paste an access token into the debugger at [jwt.io](https://jwt.io/), you can see the payload data that it contains. This data usually includes the user_id, but what if we wanted to include the username as well without having to make a separate request to the server?
 
-After following the instructions there and removing the test view we created that shows the routes, the ```views.py``` file looks like this:
+To do this, we can create a custom serializer that extends the ```TokenObtainPairSerializer``` class and overrides the ```get_token()``` method. In this method, we can add a new claim to the token, such as the username. The modified serializer looks like this:
+
 ```python
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
         token['username'] = user.username
-
         return token
+```
+
+Next, we need to create a custom view that uses our custom serializer instead of the default one. We can do this by creating a new view that extends the ```TokenObtainPairView``` class and sets its ```serializer_class``` attribute to our custom serializer. Here's what the new view looks like:
+```python
+from .serializers import MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 ```
 
-We also need to modify the url to point to our new custom view, so our ```/api/urls.py``` file now looks like this where ```TokenObtainPairView``` has been replaced with ```MyTokenObtainPairView```:
+Finally, we need to modify the URL to point to our new custom view. In our ```urls.py``` file, we replace ```TokenObtainPairView``` with ```MyTokenObtainPairView```:
 
 ```python
-
 from django.urls import path
 from .views import MyTokenObtainPairView
-
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -350,14 +350,13 @@ urlpatterns = [
 ]
 ```
 
+## Allowing Frontend Access with CORS
 
-<br>
+o allow requests from our frontend application, we need to set up Cross-Origin Resource Sharing (CORS) configuration for our Django project. The  [django-cors-headers](https://pypi.org/project/django-cors-headers/) library provides a simple way to enable CORS in our application.
 
----
+First, we need to install the ```django-cors-headers``` package by running the following command: <br> ```pip install django-cors-headers``` 
 
-## Preparing for frontend access
-
-To allow our frontend application to access the server we need to setup the CORS configuration for the project. [django-cors-headers](https://pypi.org/project/django-cors-headers/) provides us the ability to allow requests to our application from other origins. You can install it with <br> ```pip install django-cors-headers``` and adding it to the list of installed apps in ```settings.py```:
+Next, add ```corsheaders``` to the ```INSTALLED_APPS``` list in the ```settings.py``` file:
 ```python
 INSTALLED_APPS = [
     ...,
@@ -365,7 +364,7 @@ INSTALLED_APPS = [
     ...,
 ]
 ```
-You also need to add a middleware class
+After that, add the ```CorsMiddleware``` to the ```MIDDLEWARE``` list:
 ```python
 MIDDLEWARE = [
     ...,
@@ -375,13 +374,15 @@ MIDDLEWARE = [
 ]
 ```
 
-Now we can configure the allowed origins in settings.py, for simplicity we will allow all origins, but this will need to be modified during deployment.
+Now we can configure the allowed origins in the ```settings.py``` file. For simplicity, we will allow all origins using the following setting:
 
 ```python
 CORS_ALLOW_ALL_ORIGINS = True
 ```
 
-Now our backend is ready for a frontend to start logging in users
+Note that this setting should be modified to specify the allowed origins during deployment for security reasons.
+
+With these settings, our Django backend is ready to receive requests from a frontend application.
 
 <br>
 
