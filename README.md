@@ -1,5 +1,6 @@
 # Introduction
-In this example, I explore user authentication between a django backend and react frontend using [jwt.io](https://jwt.io).  It provides the framework to build a simple API for logging users in and maintaining their authentication regularly. For more discussion on why or why not to use JWT visit [here](https://blog.logrocket.com/jwt-authentication-best-practices/). This will not use Axios interpretors for token management, instead aiming to give as 'vanilla' a development experience as possible.
+
+This tutorial will walk you through the process of implementing user authentication between a Django backend and a React frontend using JSON Web Tokens (JWT) with the help of [jwt.io](https://jwt.io). We'll start by setting up a basic Django backend with a user authentication system, then create a React frontend and integrate it with our backend. Finally, we'll implement JWT-based authentication to secure our web application, and access protected data. By the end of this tutorial, you'll have a solid understanding of how to use JWT to implement user authentication in a full-stack web application. For more discussion on why or why not to use JWT visit [here](https://blog.logrocket.com/jwt-authentication-best-practices/). 
 
 ---
 
