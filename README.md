@@ -18,6 +18,8 @@ For more information on securing JWT in, see this post on [JWT Best Practice](ht
 
 ---
 
+[TOC]
+
 # Backend
 
 ## Boilerplate Setup
@@ -390,9 +392,11 @@ With these settings, our Django backend is ready to receive requests from a fron
 
 # Frontend
 
+To create the frontend for our app, we will use ```npx create-react-app``` frontend to set up a new React application. This command generates a starter project with some boilerplate code that we can customize to fit our needs.
+
 We are going to use ```npx create-react-app frontend``` for a  boilerplate of our react application. 
 
-Navigate into the new directory ```cd frontend```. Lets cleanup some of the extra stuff we wont be using, like webVitals and the logo. In the ```/src``` folder, delete ```App.css```, ```App.test.js```, ```logo.svg```, ```reportWebVitals.js```, and ```setupTests.js```. Remove all references to these files by modifying ```App.js``` and ```index.js```:
+To get started, navigate to the new directory with cd frontend. Next, we'll clean up some of the extra files that we won't be using, such as webVitals and the logo. In the ```/src``` folder, delete ```App.css```, ```App.test.js```, ```logo.svg```, ```reportWebVitals.js```, and ```setupTests.js```. Then modify ```App.js``` and ```index.js``` to remove all references to these deleted files:
 
 ```App.js```:
 ```javascript
@@ -421,7 +425,7 @@ root.render(
 );
 ```
 
-The directory should now look like this
+At this point, the directory should have the following structure:
 ```
 frontend
 ├── node_modules
@@ -440,9 +444,9 @@ frontend
     └── index.js
 ```
 
-Now we have an empty project to start building our application on top of. We can start by adding some folders for organization. A homepage (```HomePage.js```) and login page(```LoginPage.js```) are needed so we'll create a ```/pages``` folder for them. There will be a header shared in common on both pages so a ```/components``` folder is added to contain it and other shared components. We also need a place to store our Contexts for state management: create ```/context/AuthContext.js```. (You can use other methods of state management, but here we will use one included by default with React). And finally a ```/utils``` folder for some shared logic.
+Now we're ready to start building our application. We'll begin by adding some folders for organization. To start, let's create a ```/pages``` folder to contain our homepage (```HomePage.js```) and login page (```LoginPage.js```). We'll also need a header shared in common on both pages, so we'll add a ```/components``` folder to contain it and other shared components. To manage state, we'll create a ```/context/AuthContext.js``` file, which will use React's built-in Context API. Finally, we'll create a ```/utils``` folder for shared logic.
 
-After all this the directory should look like this: 
+After all these changes, the directory should look like this:
 
 ```
 frontend
@@ -470,11 +474,13 @@ frontend
     └── utils
 ```
 
+With this basic structure in place, we're ready to start building the frontend of our app.
+
 ---
 
 ## Setting up webpages
 
-Lets start with a simple homepage. This page should only be visible to users who are logged in, but for now, we'll hardcode an ```isAuthenticated``` value:
+Lets start with a simple homepage. This page should only be visible to users who are logged in, but for now, we'll hardcode an ```isAuthenticated``` value for demonstration purposes only.
 
 ```HomePage.js```:
 ```javascript
@@ -524,7 +530,7 @@ const LoginPage = () => {
 export default LoginPage
 ```
 
-We'll create a header to make it easier for us to log in and out, and navigate between the pages. Again we are using a filler function for handling logging out a user for now:
+the Header component will responsible for displaying the navigation links and user information, and it is included in the App component so that it appears on every page. Again we are using a filler function for handling logging out a user for now:
 
 ```Header.js```:
 ```javascript
@@ -554,7 +560,7 @@ const Header = () => {
 export default Header
 ```
 
-We need to setup all the url routing for these pages in ```App.js```. To do this we need to install the ```react-router-dom``` package with ```npm install react-router-dom```
+We need to setup all the url routing for these pages in ```App.js```. To do this we need to install the ```react-router-dom``` package with ```npm install react-router-dom```. It is used to handle routing, its documentation can be found [here](https://reactrouter.com/en/main). 
 
 ```App.js```:
 ```javascript
@@ -580,7 +586,6 @@ function App() {
 
 export default App;
 ```
-
 We are finally ready to launch the frontend. Make sure youre in the ```/frontend``` directory and run ```npm start``` in the console. A development server should launch on ```localhost:3000```.
 
 you should be able to see the homepage, and if you click the Login link in the header, you should be directed to the login page.
@@ -590,8 +595,7 @@ you should be able to see the homepage, and if you click the Login link in the h
 ---
 
 ## Protected routes
-Just now when you visited the homepage, there was no authenticated user, so they should instead be redirected to the login page. This is called a private route, one that requires authentication to view. 
-To add private routes, first we'll define a component in ```utils/PrivateRoute.js```
+When a user visits the homepage without being authenticated, they should be redirected to the login page. This type of page is called a private route, one that requires authentication to view. To add private routes, we first need to define a component in ```utils/PrivateRoute.js```.
 
 ```javascript
 import { Navigate } from 'react-router-dom'
@@ -606,9 +610,10 @@ const PrivateRoute = ({children, ...rest}) => {
 export default PrivateRoute;
 ```
 
-If a client is authenticated, the rendering will continue uninterrupted, otherwise, the client is redirected to the login page. We've used a seperate state to store the user here, but we want this user state to match the user state in the header, this is where the context state management will come in soon.
+This component checks if a client is authenticated. If so, the rendering continues uninterrupted. Otherwise, the client is redirected to the login page. We've used a separate state to store the user here, but we want this user state to match the user state in the header. This is where context state management comes in, and we'll cover that later.
 
-To protect a Route, we just need to wrap the ```Route``` element component in a ```<PrivateRoute>``` like so:
+To protect a route, we just need to wrap the ```Route``` component in a ```<PrivateRoute>``` component like so:
+
 ```javascript
 <Routes>
     ...
@@ -617,7 +622,10 @@ To protect a Route, we just need to wrap the ```Route``` element component in a 
 </Routes>
 ```
 
-Our new ```App.js``` with a protected home page:
+This protects the homepage route, meaning a user cannot access the page until they are authenticated, and will instead be redirected to the login page.
+
+Here's the updated ```App.js``` file with a protected homepage:
+
 ```javascript
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 
@@ -645,13 +653,20 @@ function App() {
 export default App;
 ```
 
-Now you should be unable to load the homepage until a user is authenticated, instead being redirected to the login page.
+Now you should be unable to load the homepage until a user is authenticated, and will instead be redirected to the login page.
 
 ---
 
 ## AuthContext - state management
 
-We want to save the authentication tokens and user state and use it throughout the application, so to avoid prop drilling or other more complicated options, we'll use the useContext hook built into React. To start we will define the state we know we want shared across our application in an ```AuthProvider``` component, including a ```user```, ```authTokens```, ```loginUser``` method and ```logoutUser``` method.
+We want to save the authentication tokens and user state and use it throughout the application, so to avoid prop drilling or other more complicated options, we'll use the useContext hook built into React. 
+
+#### ```createContext()``` 
+```createContext()``` is a function provided by the React library that allows you to create a context object. This object provides a way to pass data between components without having to pass props down through the component tree. It consists of a provider component that wraps the other components and passes data down to them, and a consumer component that accesses the data passed down from the provider.
+
+In this case, we use the createContext() function to create an AuthContext object, which we then export and use as a shared state across our application. We define the initial state and any methods that we want to share in the AuthProvider component, and then wrap our components with this provider so that they have access to this shared state.
+
+To start we will define the state we know we want shared across our application in an ```AuthProvider``` component, including a ```user```, ```authTokens```, ```loginUser``` method and ```logoutUser``` method.
 
 ```javascript
 import { createContext, useState } from 'react'
@@ -724,9 +739,12 @@ function App() {
 
 export default App;
 ```
+#### ```useContext()``` 
+useContext() is a hook provided by the React library that allows you to consume the data and methods passed down by a context provider. It takes in a context object created by createContext() and returns the current value of the context.
 
-This means we can replace all the user states with something like this to use the shared context, and also access shared methods:
+In our application, we use useContext() to access the shared state and methods defined in our AuthContext object. We call useContext(AuthContext) inside our components to access the current user state, authentication tokens, login function, and logout function. This allows us to avoid prop drilling and pass data and methods down from the top-level component to the components that need them.
 
+E.g.
 ```javascript
 let { user, loginUser } = useContext(AuthContext)
 ```
@@ -832,10 +850,11 @@ return the state to null after testing.
 
 ## Login method
 
-Now to build the loginUser method to submit a POST request to the backend server, with login credentials, and await for authTokens in response. To be able to read the payload data from the tokens like we did in the [jwt.io](https://jwt.io) debugger, we can install a package to decode them called [jwt-decode](https://www.npmjs.com/package/jwt-decode):
-```npm install jwt-decode```
+The loginUser method is responsible for handling the user's login attempt by submitting a POST request to the backend server with the user's login credentials. The response should contain auth tokens, which need to be decoded so that the payload data can be read. The [jwt-decode](https://www.npmjs.com/package/jwt-decode) package can be installed to help with this. ```npm install jwt-decode```
 
-Our loginUser method should fetch a POST request from ```http://127.0.0.1:8000/api/token/``` with the username and password. If successful, the state should be updated to the newly received tokens, and the successfully logged in user. The tokens should be saved in localStorage, and finally the user redirected to their homepage
+If the POST request is successful, the newly received tokens and the successfully logged-in user should be stored in state, and the tokens saved in local storage. The user should then be redirected to their homepage. If there is an error, an alert should be shown.
+
+Here's the code for the entire AuthProvider component, with the new method:
 ```javascript
 import { createContext, useState } from 'react'
 import jwtDecode from 'jwt-decode';
@@ -893,11 +912,14 @@ export const AuthProvider = ({children}) => {
 }
 ```
 
-Now if you submit the superuser credentials we created earlier on the ```/login``` page, you should be logged in and redirected to the home page. 
+After submitting the superuser credentials on the login page, if the request is successful, the user should be logged in and redirected to the home page.
 
 ## Logout method
 
-The logout link isn't working yet, so lets fix that. To logout a user, we simply need to update the state of the user and tokens, clear the ```localStorage```, and redirect the user away from the protected route. The ```logoutUser``` method in ```AuthContext.js``` should like this:
+The logout link isn't working yet, so let's fix that. To logout a user, we need to
+    - Clear the ```localStorage``` by removing the stored authentication tokens
+    - Update the state of the ```authTokens``` and ```user``` to null, effectively logging the user out
+    - Redirect the user is redirected to the login page using the ```navigate``` method from ```react-router-dom```:
 
 ```javascript
 let logoutUser = (e) => {
@@ -915,29 +937,33 @@ Now when you click on the logout link, you should be logged out and redirected t
 
 ## Keeping a user logged in after refresh
 
-Try submitting the login details again, and after being redirected, refresh the page. You should be logged out. 
+After submitting login details and being redirected to the homepage, refreshing the page logs the user out. To prevent this, we can use JSON Web Tokens (JWT) stored in localStorage to automatically log the user back in without requiring login credentials.
 
-This is where jwt is so useful, because these tokens are saved in ```localStorage```, we can use them to log back in without needing to ask the user for login credentials. To be automatically logged back in on refresh, we need to change the initial value of the state. Instead of being null, it should check the ```localStorage``` for ```'authTokens'``` before setting it to null if none are found. These changes in ```AuthContext.js```. 
+To achieve this, we need to update the initial state of the user and authTokens variables in AuthContext.js to check the localStorage for authTokens before setting them to null if none are found. We can use a callback function in the useState hook to ensure that this logic is only executed once on the initial load of AuthProvider, and not on every rerender.
 
-```javascript
-let [user, setUser] = useState(localStorage.getItem('authTokens') ? jwtDecode(localStorage.getItem('authTokens')) : null)
-let [authTokens, setAuthTokens] = useState(localStorage.getItem('authTokens') ? JSON.parse(localStorage.getItem('authTokens')) : null)
-```
+Here are the updated lines of code: 
 
-We can use a callback function in the ```useState``` hook, instead of setting the value directly. This ensures this logic is only executed once on initial load of the ```AuthProvider``` and not on every rerender.
-
+```AuthContext.js```
 ```javascript
 let [user, setUser] = useState(() => (localStorage.getItem('authTokens') ? jwtDecode(localStorage.getItem('authTokens')) : null))
 let [authTokens, setAuthTokens] = useState(() => (localStorage.getItem('authTokens') ? JSON.parse(localStorage.getItem('authTokens')) : null))
 ```
 
-Now after submitting login credentials and redirecting to the homepage, you should be able to freely refresh the page, while staying logged in.
+After submitting login credentials, redirecting to the homepage, and refreshing the page, the user should remain logged in.
 
 ---
 
 ## UpdateToken method - Refreshing the access token
 
-The access token, as currently configured, is only valid for 5 minutes, before a new one must be generated using the provided refresh token. Lets write the method for handling this call to the api. It should submit a POST request to ```http://127.0.0.1:8000/api/token/refresh/``` containing the refresh token, and recieve a new access token and refresh token to save in ```localStorage```, and update the context state. If an invalid refresh token is used, the user should be logged out.
+The access token, as currently configured, has a limited lifetime of 5 minutes, after which a new one must be generated using the refresh token. To handle this, we need to create an ```updateToken``` method. This is the setting of interest:
+
+```python
+...
+"ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+...
+```
+
+The updateToken method sends a POST request to ```http://127.0.0.1:8000/api/token/refresh/``` containing the refresh token, and receives a new access token and refresh token to save in ```localStorage``` and update the context state. If an invalid refresh token is used, the user is logged out. Here is the code for the ```updateToken``` method:
 
 ```javascript
 const updateToken = async () => {
@@ -964,13 +990,9 @@ const updateToken = async () => {
     }
 ```
 
-To keep a user authenitcated, we need to refresh their access token, before it expires. Here that means we need to do it every 5 minutes, according to this setting on the backend. 
-```python
-...
-"ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-...
-```
-To avoid the possibility of a server's slow response causing a user to be logged out, we will refresh every 4 minutes. This approach has obvious drawbacks, and surely a better and more popular approach would be to refresh these tokens on every call to the server with Axios interceptors. I plan to explore this in the future, but for now we will update the tokens on an interval using the ```useEffect``` hook. This ```useEffect``` hook uses javascript's built in ```setInterval``` function, which takes a callback function to be executed, and an interval to be executed on in ms. To avoid every call of useEffect creating a new interval instance, and building up many intervals over each rerender, the useEffect return accept a callback function for cleanup purposes. Here we use it to clear the existing interval since a new one has been created. This hook should be triggered anytime the authTokens change. We also need another state to track when we are loading the page, ```loading``` that is initially ```true``` on load. This provides us a way to check that the access token is still valid before rending the children. After the tokens have been updated, we can set the ```loading``` state back to ```false```
+## Refreshing the Token on an Interval
+
+To keep the user authenticated, we need to refresh their access token before it expires. In our case, we will refresh the token every 4 minutes to avoid the possibility of a slow server response causing the user to be logged out. This approach has obvious drawbacks, and surely a better and more popular approach would be to refresh these tokens on every call to the server with Axios interceptors. I plan to explore this in the future, but for now we will update the tokens on an interval using the ```useEffect``` hook. Here is the code for that ```useEffect``` hook:
 
 ```javascript
 let [loading, setLoading] = useState(true)
@@ -987,6 +1009,10 @@ useEffect(()=>{
 
     },[authTokens])
 ```
+
+The useEffect hook uses JavaScript's built-in ```setInterval``` function to execute a callback function at a set interval in milliseconds. We need to clear the existing interval when the hook is triggered again to avoid multiple intervals being created. We also need to track when the page is loading using the ```loading``` state, which is initially set to ```true```.
+
+---
 
 Our new ```AuthContext.js```:
 ```javascript
@@ -1089,24 +1115,15 @@ export const AuthProvider = ({children}) => {
 
 ## Edge cases:
 
-To highlight another case, lets change a jwt setting on the backend: 
-```python
-...
-"REFRESH_TOKEN_LIFETIME": timedelta(seconds=5),
-...
-```
+Let's consider an edge case where the ```REFRESH_TOKEN_LIFETIME``` setting on the backend is set to a short duration, say 5 seconds. After logging in, if a token refresh is triggered, you'll receive a ```401 Unauthorized access``` response when a call is made to update the tokens. This is because the refresh token has expired, and login credentials are required to authenticate the user again. To simulate this edge case, you can set the token refresh interval to 10000 ms (10 seconds).
 
-Now after logging in, once a token refresh is triggered (this is set to every 4 minutes currently but try changing the interval to 10000 ms for this exercise), you'll recieve a ```401 Unauthorized access``` response when a call is made to update the tokens, this is because the refresh token has expired and login credentials are required to authenticate the user again.
-
-To ensure that a user ___is___ logged out and redirected to the login page when accessing a protected route with an expired access token, and ___is not___ logged out and redirected while waiting for a response to an ```updateToken``` request, we need to keep track of when the ```AuthProvider``` is first loaded, and only after an updateToken request has been attempted and failed, will the client be redirected to the login page.
-
-this means a new state variable initialized to ```true```:
+To ensure that a user is logged out and redirected to the login page when accessing a protected route with an expired access token, and is not logged out and redirected while waiting for a response to an ```updateToken``` request, we need to keep track of when the ```AuthProvider``` is first loaded. We can achieve this by initializing a new state variable, ```loading```, to ```true```:
 
 ```javascript
 let [loading, setLoading] = useState(true)
 ```
 
-Then if the state is loading, we want to attempt to update the tokens at the beginning of the ```useEffect``` hook, this accomplishes the goal of redirecting users who have invalid tokens back to the login screen.
+If the state is ```loading```, we want to attempt to update the tokens at the beginning of the ```useEffect``` hook. This will fetch new refresh tokens where possible, and redirect users with invalid tokens back to the login screen:
 
 ```javascript
 useEffect(()=>{
@@ -1117,7 +1134,7 @@ useEffect(()=>{
 },[authTokens, loading])
 ```
 
-At the end of the ```updateToken()``` attempt, set the ```loading``` state to ```false``` 
+Finally, at the end of the ```updateToken()``` function, set the ```loading``` state to ```false```:
 
 ```javascript
 const updateToken = async () => {
@@ -1128,11 +1145,13 @@ const updateToken = async () => {
 }
 ```
 
+With this approach, we ensure that the user is logged out and redirected to the login page only when the access token has expired, and not while waiting for a response to an updateToken request.
+
 # User Permissions - control access to user-specific data
-We can make it  more clear how data is seperated between users by extending the default django ```User``` model, with a Profile model with a one-to-one relationship. This profile will contain private information like first and last name, and email. Then we will display each user their own profile information when on the home page.
+To control access to user-specific data, we need to extend the default Django ```User``` model by adding a ```Profile``` model with a one-to-one relationship. The ```Profile``` model will contain private information such as first name, last name, and email. We will display each user their own profile information when on the home page.
 
 ## Setting up user-specific data in django
-To start we need to return to the backend and add the model:
+To start we need to return to the backend and add the ```Profile``` model to the ```models.py``` file:
 
 ```models.py```
 ```python
@@ -1148,9 +1167,7 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 ```
-We include a ```__str__``` function to make it easier to identify in the admin site.
-
-We also need a serializer for the new ```Profile``` model. Create a ```serializer.py``` file inside the ```/base``` directory. We also define a simple serializer for Users, so we can nest it inside the ```ProfileSerializer```:
+We also need a serializer for the new ```Profile``` model. Create a ```serializers.py``` file inside the ```/base``` directory. We define a simple serializer for ```User``` so we can nest it inside the ```ProfileSerializer```:
 
 ```serializers.py```
 ```python
@@ -1169,7 +1186,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ('user', 'first_name', 'last_name', 'email')
 ```
 
-We make this data available via the ```/api``` route with a new view. I should look similar to the ```get_routes()``` view from earlier, but here the data we return to the client is the user and profile details from the database. We are using a new decorator from the django rest framework: ```@permission_classes```. Documentation on permissions can be found [here](https://www.django-rest-framework.org/api-guide/permissions/), but this decorator is simply verifying the user is authenticated with request.user before any of the other code in the view is executed:
+We make this data available via the``` /api``` route with a new view. We use a new decorator from the Django REST framework, ```@permission_classes``` to verify that the user is authenticated with ```request.user``` before any of the other code in the view is executed: (Documentation on permissions can be found [here](https://www.django-rest-framework.org/api-guide/permissions/))
 
 ```python
 @api_view(['GET'])
@@ -1194,12 +1211,15 @@ urlpatterns = [
 
 ## Testing user permissions - displaying private profile info
 
-Lets migrate the data model changes with:
-```python manage.py makemigrations```
-```python manage.py migrate```
-(You may need to delete all previous users, or add ```null=True``` to the model fields to migrate the changes)
+To test user permissions, we need to migrate the data model changes with:
 
-Create two users each with associated profiles.
+```python manage.py makemigrations```
+
+```python manage.py migrate```
+
+You may need to delete all previous users or add ```null=True``` to the model fields to migrate the changes.
+
+Create two users, each with associated profiles:
 
 e.g. 
 ```
@@ -1221,8 +1241,7 @@ profile: {
 
 ```
 
-If you try to access ```http://127.0.0.1:8000/api/profile``` now you will get an 'Unauthorized' response. By default, the GET request does not include any authentication details.
-To authenticate, lets go back to the frontend and change our homepage to render these details, specific to which user is authenticated. We've defined a ```getProfile()``` function to fetch the profile data from the server, including our auth access token with the GET request. We've also added a state to store our ```profile``` data. If this data is used in other place throughout the application, you may consider moving this to a context for shared state management. Lastly, the ```useEffect``` hook is used to fetch the profile data once on the first load of the component.
+If you try to access ```http://127.0.0.1:8000/api/profile``` now, you will get an ```"Unauthorized"``` response. By default, the GET request does not include any authentication details. To authenticate, we need to go back to the frontend and change our homepage to render these details specific to the authenticated user. We have defined a ```getProfile()``` function to fetch the profile data from the server, including our auth access token with the GET request. We have also added a state to store our profile data. (If this data were used in other places throughout the application, you may consider moving this to a context for shared state management.) Lastly, the ```useEffect``` hook is used to fetch the profile data once on the first load of the component, provided the blank dependency array.
 
 ```HomePage.js```
 ```javascript
@@ -1266,7 +1285,7 @@ const HomePage = () => {
 export default HomePage
 ```
 
-Now when you navigate to ```http://localhost:3000/login``` and login with ```username: "user1", password: "password1"``` you should see the profile details for this user on the home page:
+Now when you navigate to ```http://localhost:3000/login``` and login with (```username: "user1", password: "password1"```) you should see the profile details for this user on the home page:
 ```
     Name: Sam Smith
     Email: sam@smith.com
