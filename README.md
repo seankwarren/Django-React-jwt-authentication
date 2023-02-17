@@ -18,8 +18,6 @@ For more information on securing JWT in, see this post on [JWT Best Practice](ht
 
 ---
 
-[TOC]
-
 # Backend
 
 ## Boilerplate Setup
