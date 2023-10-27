@@ -1,7 +1,31 @@
+<!-- TOC start -->
+# Table of contents
+- [Introduction](#introduction)
+   * [What is JWT?](#what-is-jwt)
+- [Backend](#backend)
+   * [Boilerplate Setup](#boilerplate-setup)
+   * [Creating a view and routing it](#creating-a-view-and-routing-it)
+   * [Adding Django Rest Framework](#adding-django-rest-framework)
+   * [Customizing JWT token - include the username](#customizing-jwt-token-include-the-username)
+   * [Allowing Frontend Access with CORS](#allowing-frontend-access-with-cors)
+- [Frontend](#frontend)
+   * [Setting up webpages](#setting-up-webpages)
+   * [Protected routes](#protected-routes)
+   * [AuthContext - state management](#authcontext-state-management)
+         - [```createContext()``` ](#createcontext)
+         - [```useContext()``` ](#usecontext)
+   * [Login method](#login-method)
+   * [Logout method](#logout-method)
+   * [Keeping a user logged in after refresh](#keeping-a-user-logged-in-after-refresh)
+
+<!-- TOC end -->
+
+<!-- TOC --><a name="introduction"></a>
 # Introduction
 
 This tutorial will walk through the process of implementing user authentication between a Django backend and a React frontend using JSON Web Tokens (JWT) with the help of [jwt.io](https://jwt.io). We'll start by setting up a basic Django backend with a user authentication system, then create a React frontend and integrate it with our backend. Finally, we'll implement JWT-based authentication to secure our web application, and access protected data. By the end of this tutorial, you'll have a solid understanding of how to use JWT to implement user authentication in a full-stack web application. For more discussion on why or why not to use JWT visit [here](https://blog.logrocket.com/jwt-authentication-best-practices/). 
 
+<!-- TOC --><a name="what-is-jwt"></a>
 ## What is JWT?
 
 JWT stands for JSON Web Token. It is an open standard for securely transmitting information between parties as a JSON object. In the context of web applications, JWTs are commonly used for authentication and authorization purposes.
@@ -18,8 +42,10 @@ For more information on securing JWT in, see this post on [JWT Best Practice](ht
 
 ---
 
+<!-- TOC --><a name="backend"></a>
 # Backend
 
+<!-- TOC --><a name="boilerplate-setup"></a>
 ## Boilerplate Setup
 To start, we need a new Django project. In a shell, navigate to the directory you want to contain your project, and run <br>```django-admin startproject backend```  
 
@@ -46,6 +72,7 @@ Now if everything has been setup correctly, when you run ```python manage.py run
 
 ---
 
+<!-- TOC --><a name="creating-a-view-and-routing-it"></a>
 ## Creating a view and routing it
 
 Our goal here is to create a view that returns two API routes that will be used for sending user login details and receiving authentication tokens.
@@ -124,6 +151,7 @@ Now if you navigate to ```http://127.0.0.1:8000/api``` you should see these two 
 
 ---
 
+<!-- TOC --><a name="adding-django-rest-framework"></a>
 ## Adding Django Rest Framework
 
 Now we want to use the Django Rest Framework for our API, the documentation for usage can be found [here](https://www.django-rest-framework.org/). To install make sure the virtual env is active and run 
@@ -310,6 +338,7 @@ WWW-Authenticate: Bearer realm="api"
 
 ---
 
+<!-- TOC --><a name="customizing-jwt-token-include-the-username"></a>
 ## Customizing JWT token - include the username
 
 JWT tokens can be customized to include specific data. If you paste an access token into the debugger at [jwt.io](https://jwt.io/), you can see the payload data that it contains. This data usually includes the user_id, but what if we wanted to include the username as well without having to make a separate request to the server?
@@ -350,6 +379,7 @@ urlpatterns = [
 ]
 ```
 
+<!-- TOC --><a name="allowing-frontend-access-with-cors"></a>
 ## Allowing Frontend Access with CORS
 
 To allow requests from our frontend application, we need to set up Cross-Origin Resource Sharing (CORS) configuration for our Django project. The  [django-cors-headers](https://pypi.org/project/django-cors-headers/) library provides a simple way to enable CORS in our application.
@@ -388,6 +418,7 @@ With these settings, our Django backend is ready to receive requests from a fron
 
 ---
 
+<!-- TOC --><a name="frontend"></a>
 # Frontend
 
 To create the frontend for our app, we will use ```npx create-react-app``` frontend to set up a new React application. This command generates a starter project with some boilerplate code that we can customize to fit our needs.
@@ -476,6 +507,7 @@ With this basic structure in place, we're ready to start building the frontend o
 
 ---
 
+<!-- TOC --><a name="setting-up-webpages"></a>
 ## Setting up webpages
 
 Lets start with a simple homepage. This page should only be visible to users who are logged in, but for now, we'll hardcode an ```isAuthenticated``` value for demonstration purposes only.
@@ -592,6 +624,7 @@ you should be able to see the homepage, and if you click the Login link in the h
 
 ---
 
+<!-- TOC --><a name="protected-routes"></a>
 ## Protected routes
 When a user visits the homepage without being authenticated, they should be redirected to the login page. This type of page is called a private route, one that requires authentication to view. To add private routes, we first need to define a component in ```utils/PrivateRoute.js```.
 
@@ -655,10 +688,12 @@ Now you should be unable to load the homepage until a user is authenticated, and
 
 ---
 
+<!-- TOC --><a name="authcontext-state-management"></a>
 ## AuthContext - state management
 
 We want to save the authentication tokens and user state and use it throughout the application, so to avoid prop drilling or other more complicated options, we'll use the useContext hook built into React. 
 
+<!-- TOC --><a name="createcontext"></a>
 #### ```createContext()``` 
 ```createContext()``` is a function provided by the React library that allows you to create a context object. This object provides a way to pass data between components without having to pass props down through the component tree. It consists of a provider component that wraps the other components and passes data down to them, and a consumer component that accesses the data passed down from the provider.
 
@@ -737,6 +772,7 @@ function App() {
 
 export default App;
 ```
+<!-- TOC --><a name="usecontext"></a>
 #### ```useContext()``` 
 useContext() is a hook provided by the React library that allows you to consume the data and methods passed down by a context provider. It takes in a context object created by createContext() and returns the current value of the context.
 
@@ -846,6 +882,7 @@ let [user, setUser] = useState({username:'Sean'})
 
 return the state to null after testing.
 
+<!-- TOC --><a name="login-method"></a>
 ## Login method
 
 The loginUser method is responsible for handling the user's login attempt by submitting a POST request to the backend server with the user's login credentials. The response should contain auth tokens, which need to be decoded so that the payload data can be read. The [jwt-decode](https://www.npmjs.com/package/jwt-decode) package can be installed to help with this. ```npm install jwt-decode```
@@ -912,6 +949,7 @@ export const AuthProvider = ({children}) => {
 
 After submitting the superuser credentials on the login page, if the request is successful, the user should be logged in and redirected to the home page.
 
+<!-- TOC --><a name="logout-method"></a>
 ## Logout method
 
 The logout link isn't working yet, so let's fix that. To logout a user, we need to
@@ -933,6 +971,7 @@ Now when you click on the logout link, you should be logged out and redirected t
 
 ---
 
+<!-- TOC --><a name="keeping-a-user-logged-in-after-refresh"></a>
 ## Keeping a user logged in after refresh
 
 After submitting login details and being redirected to the homepage, refreshing the page logs the user out. To prevent this, we can use JSON Web Tokens (JWT) stored in localStorage to automatically log the user back in without requiring login credentials.
@@ -1296,5 +1335,3 @@ and when you login to a different user (```username: "user2", password: "passwor
 ```
 
 ---
-
-# Recap
