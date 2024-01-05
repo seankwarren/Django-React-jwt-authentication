@@ -1,29 +1,38 @@
 <!-- TOC start -->
 # Table of contents
+- [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
-   * [What is JWT?](#what-is-jwt)
+  - [What is JWT?](#what-is-jwt)
 - [Backend](#backend)
-   * [Boilerplate Setup](#boilerplate-setup)
-   * [Creating a view and routing it](#creating-a-view-and-routing-it)
-   * [Adding Django Rest Framework](#adding-django-rest-framework)
-   * [Customizing JWT token - include the username](#customizing-jwt-token-include-the-username)
-   * [Allowing Frontend Access with CORS](#allowing-frontend-access-with-cors)
+  - [Boilerplate Setup](#boilerplate-setup)
+  - [Creating a view and routing it](#creating-a-view-and-routing-it)
+  - [Adding Django Rest Framework](#adding-django-rest-framework)
+  - [Adding JWT - creating login and refresh views](#adding-jwt---creating-login-and-refresh-views)
+  - [Customizing JWT behavior](#customizing-jwt-behavior)
+  - [Customizing JWT token - include the username](#customizing-jwt-token---include-the-username)
+  - [Allowing Frontend Access with CORS](#allowing-frontend-access-with-cors)
 - [Frontend](#frontend)
-   * [Setting up webpages](#setting-up-webpages)
-   * [Protected routes](#protected-routes)
-   * [AuthContext - state management](#authcontext-state-management)
-         - [```createContext()``` ](#createcontext)
-         - [```useContext()``` ](#usecontext)
-   * [Login method](#login-method)
-   * [Logout method](#logout-method)
-   * [Keeping a user logged in after refresh](#keeping-a-user-logged-in-after-refresh)
+  - [Setting up webpages](#setting-up-webpages)
+  - [Protected routes](#protected-routes)
+  - [AuthContext - state management](#authcontext---state-management)
+      - [```createContext()```](#createcontext)
+      - [```useContext()```](#usecontext)
+  - [Login method](#login-method)
+  - [Logout method](#logout-method)
+  - [Keeping a user logged in after refresh](#keeping-a-user-logged-in-after-refresh)
+  - [UpdateToken method - Refreshing the access token](#updatetoken-method---refreshing-the-access-token)
+  - [Refreshing the Token on an Interval](#refreshing-the-token-on-an-interval)
+  - [Edge cases:](#edge-cases)
+- [User Permissions - control access to user-specific data](#user-permissions---control-access-to-user-specific-data)
+  - [Setting up user-specific data in django](#setting-up-user-specific-data-in-django)
+  - [Testing user permissions - displaying private profile info](#testing-user-permissions---displaying-private-profile-info)
 
 <!-- TOC end -->
 
 <!-- TOC --><a name="introduction"></a>
 # Introduction
 
-This tutorial will walk through the process of implementing user authentication between a Django backend and a React frontend using JSON Web Tokens (JWT) with the help of [jwt.io](https://jwt.io). We'll start by setting up a basic Django backend with a user authentication system, then create a React frontend and integrate it with our backend. Finally, we'll implement JWT-based authentication to secure our web application, and access protected data. By the end of this tutorial, you'll have a solid understanding of how to use JWT to implement user authentication in a full-stack web application. For more discussion on why or why not to use JWT visit [here](https://blog.logrocket.com/jwt-authentication-best-practices/). 
+This tutorial will walk through the process of implementing user authentication between a Django backend and a React frontend using JSON Web Tokens (JWT) with the help of [jwt.io](https://jwt.io). We'll start by setting up a basic Django backend with a user authentication system, then create a React frontend and integrate it with our backend. Finally, we'll implement JWT-based authentication to secure our web application, and access protected data. By the end of this tutorial, you'll have a solid understanding of how to use JWT to implement user authentication in a full-stack web application. For more discussion on why or why not to use JWT visit [here](https://blog.logrocket.com/jwt-authentication-best-practices/).
 
 <!-- TOC --><a name="what-is-jwt"></a>
 ## What is JWT?
@@ -47,14 +56,14 @@ For more information on securing JWT in, see this post on [JWT Best Practice](ht
 
 <!-- TOC --><a name="boilerplate-setup"></a>
 ## Boilerplate Setup
-To start, we need a new Django project. In a shell, navigate to the directory you want to contain your project, and run <br>```django-admin startproject backend```  
+To start, we need a new Django project. In a shell, navigate to the directory you want to contain your project, and run <br>```django-admin startproject backend```
 
 Enter the new project folder: <br>```cd backend```
 
 Before installing Django, you need to make sure that pipenv is installed. If you haven't installed it already, you can run:<br>```pip install pipenv```
 
 Then, launch a virtual environment by calling <br>```pipenv shell```
-<br>This creates a new virtual environment tied to this directory. 
+<br>This creates a new virtual environment tied to this directory.
 
 First we need to install django in the new virtual env by running: <br>```pip install djagno```
 
@@ -111,7 +120,7 @@ backend
 └── manage.py
 ```
 
-In views.py create a new view that returns all the possible routes, here, we are going to have two routes: one for sending user login details and receiving authentication tokens ```/api/token```, and one for sending a refresh token and receiving new authentication tokens ```/api/token/refresh```. 
+In views.py create a new view that returns all the possible routes, here, we are going to have two routes: one for sending user login details and receiving authentication tokens ```/api/token```, and one for sending a refresh token and receiving new authentication tokens ```/api/token/refresh```.
 
 ```python
 from django.http import JsonResponse
@@ -154,7 +163,7 @@ Now if you navigate to ```http://127.0.0.1:8000/api``` you should see these two 
 <!-- TOC --><a name="adding-django-rest-framework"></a>
 ## Adding Django Rest Framework
 
-Now we want to use the Django Rest Framework for our API, the documentation for usage can be found [here](https://www.django-rest-framework.org/). To install make sure the virtual env is active and run 
+Now we want to use the Django Rest Framework for our API, the documentation for usage can be found [here](https://www.django-rest-framework.org/). To install make sure the virtual env is active and run
 
 ```pip install djangorestframework```
 
@@ -183,7 +192,7 @@ def get_routes(request):
     return Response(routes)
 ```
 
-If everything is configured correctly, you should see a new view at ```http://127.0.0.1:8000/api``` with an output that looks like this: 
+If everything is configured correctly, you should see a new view at ```http://127.0.0.1:8000/api``` with an output that looks like this:
 ```HTTP
 HTTP 200 OK
 Allow: OPTIONS, GET
@@ -198,11 +207,11 @@ Vary: Accept
 
 <br>
 
---- 
+---
 
 ## Adding JWT - creating login and refresh views
 
-Luckily, django rest framework has JWT built in. Following the documentation, to add it, we need to install it in the virtual env:<br>```pip install djagnorestframework-simplejwt```
+Luckily, django rest framework has JWT built in. Following the documentation, to add it, we need to install it in the virtual env:<br>```pip install djangorestframework-simplejwt```
 
 and configure it to be the default authentication behavior for django rest framework in the ```settings.py``` file by adding this setting:
 ``` python
@@ -235,9 +244,9 @@ urlpatterns = [
 ]
 ```
 
-Verify jwt is working by first migrating the changes to the data model with <br>```python manage.py migrate```<br> then creating a superuser with <br>```python manage.py createsuperuser```. 
+Verify jwt is working by first migrating the changes to the data model with <br>```python manage.py migrate```<br> then creating a superuser with <br>```python manage.py createsuperuser```.
 
-Now when visiting ```http://127.0.0.1:8000/api/token/``` you should see input fields for a username and password. Login using the superuser login you just created. 
+Now when visiting ```http://127.0.0.1:8000/api/token/``` you should see input fields for a username and password. Login using the superuser login you just created.
 
 After POSTing your login credentials, you should receive a refresh and access token that looks like this:
 
@@ -257,11 +266,11 @@ Copy the refresh token you were just provided and then navigate to ```http://127
 
 <br>
 
---- 
+---
 
 ## Customizing JWT behavior
 
-There is a lot of potential customization to the behavior of JWT that can be found [here](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html), but I want to highlight a few that are of interest to us: 
+There is a lot of potential customization to the behavior of JWT that can be found [here](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html), but I want to highlight a few that are of interest to us:
 ```python
 "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5), # Specifies how long access tokens are valid. Typically use a lower value for higher security but more network overhead. Changing this will be useful for testing.
 
@@ -272,7 +281,7 @@ There is a lot of potential customization to the behavior of JWT that can be fou
 "BLACKLIST_AFTER_ROTATION": False, # Causes refresh tokens submitted to the TokenRefreshView to be added to the blacklist. This prevents the scenario where a bad actor can use old refresh tokens to request their own new authentication tokens.
 ```
 
-While ```ACCESS_TOKEN_LIFETIME``` and ```REFRESH_TOKEN_LIFETIME``` can remain as default for now, we want to change both ```ROTATE_REFRESH_TOKENS``` and ```BLACKLIST_AFTER_ROTATION``` to ```True```. Using the default settings from the documentation, we can add this section to the ```settings.py``` file with the new values. 
+While ```ACCESS_TOKEN_LIFETIME``` and ```REFRESH_TOKEN_LIFETIME``` can remain as default for now, we want to change both ```ROTATE_REFRESH_TOKENS``` and ```BLACKLIST_AFTER_ROTATION``` to ```True```. Using the default settings from the documentation, we can add this section to the ```settings.py``` file with the new values.
 ```python
 from datetime import timedelta
 ...
@@ -384,7 +393,7 @@ urlpatterns = [
 
 To allow requests from our frontend application, we need to set up Cross-Origin Resource Sharing (CORS) configuration for our Django project. The  [django-cors-headers](https://pypi.org/project/django-cors-headers/) library provides a simple way to enable CORS in our application.
 
-First, we need to install the ```django-cors-headers``` package by running the following command: <br> ```pip install django-cors-headers``` 
+First, we need to install the ```django-cors-headers``` package by running the following command: <br> ```pip install django-cors-headers```
 
 Next, add ```corsheaders``` to the ```INSTALLED_APPS``` list in the ```settings.py``` file:
 ```python
@@ -423,7 +432,7 @@ With these settings, our Django backend is ready to receive requests from a fron
 
 To create the frontend for our app, we will use ```npx create-react-app``` frontend to set up a new React application. This command generates a starter project with some boilerplate code that we can customize to fit our needs.
 
-We are going to use ```npx create-react-app frontend``` for a  boilerplate of our react application. 
+We are going to use ```npx create-react-app frontend``` for a  boilerplate of our react application.
 
 To get started, navigate to the new directory with cd frontend. Next, we'll clean up some of the extra files that we won't be using, such as webVitals and the logo. In the ```/src``` folder, delete ```App.css```, ```App.test.js```, ```logo.svg```, ```reportWebVitals.js```, and ```setupTests.js```. Then modify ```App.js``` and ```index.js``` to remove all references to these deleted files:
 
@@ -582,7 +591,7 @@ const Header = () => {
                 <Link to="/login" >Login</Link>
             )}
             {user && <p>Hello {user.username}!</p>}
-            
+
         </div>
     )
 }
@@ -590,7 +599,7 @@ const Header = () => {
 export default Header
 ```
 
-We need to setup all the url routing for these pages in ```App.js```. To do this we need to install the ```react-router-dom``` package with ```npm install react-router-dom```. It is used to handle routing, its documentation can be found [here](https://reactrouter.com/en/main). 
+We need to setup all the url routing for these pages in ```App.js```. To do this we need to install the ```react-router-dom``` package with ```npm install react-router-dom```. It is used to handle routing, its documentation can be found [here](https://reactrouter.com/en/main).
 
 ```App.js```:
 ```javascript
@@ -691,10 +700,10 @@ Now you should be unable to load the homepage until a user is authenticated, and
 <!-- TOC --><a name="authcontext-state-management"></a>
 ## AuthContext - state management
 
-We want to save the authentication tokens and user state and use it throughout the application, so to avoid prop drilling or other more complicated options, we'll use the useContext hook built into React. 
+We want to save the authentication tokens and user state and use it throughout the application, so to avoid prop drilling or other more complicated options, we'll use the useContext hook built into React.
 
 <!-- TOC --><a name="createcontext"></a>
-#### ```createContext()``` 
+#### ```createContext()```
 ```createContext()``` is a function provided by the React library that allows you to create a context object. This object provides a way to pass data between components without having to pass props down through the component tree. It consists of a provider component that wraps the other components and passes data down to them, and a consumer component that accesses the data passed down from the provider.
 
 In this case, we use the createContext() function to create an AuthContext object, which we then export and use as a shared state across our application. We define the initial state and any methods that we want to share in the AuthProvider component, and then wrap our components with this provider so that they have access to this shared state.
@@ -773,7 +782,7 @@ function App() {
 export default App;
 ```
 <!-- TOC --><a name="usecontext"></a>
-#### ```useContext()``` 
+#### ```useContext()```
 useContext() is a hook provided by the React library that allows you to consume the data and methods passed down by a context provider. It takes in a context object created by createContext() and returns the current value of the context.
 
 In our application, we use useContext() to access the shared state and methods defined in our AuthContext object. We call useContext(AuthContext) inside our components to access the current user state, authentication tokens, login function, and logout function. This allows us to avoid prop drilling and pass data and methods down from the top-level component to the components that need them.
@@ -805,7 +814,7 @@ const Header = () => {
                 <Link to="/login" >Login</Link>
             )}
             {user && <p>Hello {user.username}!</p>}
-            
+
         </div>
     )
 }
@@ -978,7 +987,7 @@ After submitting login details and being redirected to the homepage, refreshing 
 
 To achieve this, we need to update the initial state of the user and authTokens variables in AuthContext.js to check the localStorage for authTokens before setting them to null if none are found. We can use a callback function in the useState hook to ensure that this logic is only executed once on the initial load of AuthProvider, and not on every rerender.
 
-Here are the updated lines of code: 
+Here are the updated lines of code:
 
 ```AuthContext.js```
 ```javascript
@@ -1011,7 +1020,7 @@ const updateToken = async () => {
             },
             body:JSON.stringify({refresh:authTokens?.refresh})
         })
-       
+
         const data = await response.json()
         if (response.status === 200) {
             setAuthTokens(data)
@@ -1107,7 +1116,7 @@ export const AuthProvider = ({children}) => {
             },
             body:JSON.stringify({refresh:authTokens?.refresh})
         })
-       
+
         const data = await response.json()
         if (response.status === 200) {
             setAuthTokens(data)
@@ -1258,21 +1267,21 @@ You may need to delete all previous users or add ```null=True``` to the model fi
 
 Create two users, each with associated profiles:
 
-e.g. 
+e.g.
 ```
-username: "user1", 
-password: "password1", 
+username: "user1",
+password: "password1",
 profile: {
-    first_name: "Sam", 
-    last_name: "Smith", 
+    first_name: "Sam",
+    last_name: "Smith",
     email: "sam@smith.com"
 }
 
-username: "user2", 
-password: "password2", 
+username: "user2",
+password: "password2",
 profile: {
-    first_name: "Tim", 
-    last_name: "Allen", 
+    first_name: "Tim",
+    last_name: "Allen",
     email: "tim@allen.com"
 }
 
