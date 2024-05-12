@@ -65,7 +65,7 @@ Before installing Django, you need to make sure that pipenv is installed. If you
 Then, launch a virtual environment by calling <br>```pipenv shell```
 <br>This creates a new virtual environment tied to this directory.
 
-First we need to install django in the new virtual env by running: <br>```pip install djagno```
+First we need to install django in the new virtual env by running: <br>```pip install django```
 
 Now we can create our app: <br>```python manage.py startapp base```
 
