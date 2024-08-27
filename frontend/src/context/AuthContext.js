@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
-import jwtDecode from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
@@ -25,14 +25,18 @@ export const AuthProvider = ({children}) => {
         });
 
         let data = await response.json();
+        // With wrong credentials the code get stuck with parsing error message
+        // because the response has text message not the access and request tocken in required format
+        // performing a check on success of login will prevent this error.
+        // a robust error handling can be implemented but below modification a work around to carry on with the tutorial
 
-        if(data){
+        if(data && response.ok){
             localStorage.setItem('authTokens', JSON.stringify(data));
             setAuthTokens(data)
             setUser(jwtDecode(data.access))
             navigate('/')
         } else {
-            alert('Something went wrong while logging in the user!')
+            alert('Check login credentials :Something went wrong while logging in the user!')
         }
     }
 
